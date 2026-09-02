@@ -67,7 +67,25 @@ const createScene = async function () {
 
     light.intensity = 1.2;
 
-    
+    // Cielo 360°
+    const cielo = BABYLON.MeshBuilder.CreateSphere(
+    "cielo",
+    { diameter: 1000, segments: 32 },
+    scene
+    );
+
+const materialCielo = new BABYLON.PBRMaterial("materialCielo", scene);
+
+materialCielo.backFaceCulling = false;
+materialCielo.unlit = true;
+
+materialCielo.reflectionTexture =
+    new BABYLON.HDRCubeTexture("./Cielo.hdr", scene, 256);
+
+materialCielo.reflectionTexture.coordinatesMode =
+    BABYLON.Texture.SKYBOX_MODE;
+
+cielo.material = materialCielo;
 
     // Cargar edificio
     const result = await BABYLON.SceneLoader.ImportMeshAsync(
