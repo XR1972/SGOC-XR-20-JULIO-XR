@@ -173,25 +173,7 @@ featuresManager.enableFeature(
         xrInput: xr.input,
         movementOrientationFollowsViewerPose: false,
         movementSpeed: 0.08,
-        rotationSpeed: 0.20,
-
-        customRegistrationConfigurations: [
-            {
-                allowedComponentTypes: ["thumbstick"],
-                forceHandedness: "left",
-                axisChangedHandler: (axes, movementState, featureContext, xrInput) => {
-
-                    // Adelante / atrás
-                    movementState.moveY = axes.y;
-
-                    // Sin desplazamiento lateral
-                    movementState.moveX = 0;
-
-                    // Izquierda / derecha = giro
-                    movementState.rotateX = axes.x;
-                }
-            }
-        ]
+        rotationSpeed: 0.20
     }
 );
       
