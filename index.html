@@ -165,7 +165,7 @@ const xr = await scene.createDefaultXRExperienceAsync({
 const xrCamera = xr.baseExperience.camera;
 
 xrCamera.checkCollisions = true;
-xrCamera.applyGravity = true;
+xrCamera.applyGravity =  false;
 xrCamera.ellipsoid = new BABYLON.Vector3(0.4, 0.85, 0.4);
 xrCamera.ellipsoidOffset = new BABYLON.Vector3(0, 0.85, 0);
 
