@@ -190,7 +190,12 @@ featuresManager.enableFeature(
 
         stick.onAxisValueChangedObservable.add((axes) => {
 
-            console.log("JOYSTICK IZQUIERDO", axes.x, axes.y);
+       const xrCamera = xr.baseExperience.camera;
+
+if (Math.abs(axes.x) > 0.15) {
+    xrCamera.rotationQuaternion = null;
+    xrCamera.rotation.y += axes.x * 0.04;
+}    
 
         });
 
