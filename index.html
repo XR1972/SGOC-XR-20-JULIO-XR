@@ -35,6 +35,8 @@ const engine = new BABYLON.Engine(canvas, true);
 const createScene = async function () {
 
     const scene = new BABYLON.Scene(engine);
+    scene.collisionsEnabled = true;
+    scene.gravity = new BABYLON.Vector3(0, -0.5, 0);
 
     // Cámara inicial
     const camera = new BABYLON.UniversalCamera(
@@ -44,6 +46,17 @@ const createScene = async function () {
     );
 
     camera.attachControl(canvas, true);
+    camera.speed = 0.06;
+    camera.minZ = 0.05;
+    
+    camera.applyGravity = false;
+    camera.checkCollisions = true;
+    camera.ellipsoid = new BABYLON.Vector3(0.4, 0.85, 0.4);
+
+    camera.keysUp.push(87);     // W
+    camera.keysDown.push(83);   // S
+    camera.keysLeft.push(65);   // A
+    camera.keysRight.push(68);  // D
 
     // Luz
     const light = new BABYLON.HemisphericLight(
@@ -63,14 +76,54 @@ const createScene = async function () {
     );
 
     console.log("MODELO SGOC CARGADO", result);
+    result.meshes.forEach(mesh => {
+    mesh.checkCollisions = true;
+    });
+
+
+    // Encuadrar automaticamente el modelo cargado
+const meshes = result.meshes.filter(m => m.getTotalVertices && m.getTotalVertices() > 0);
+const bounds = BABYLON.Mesh.MinMax(meshes);
+const center = BABYLON.Vector3.Center(bounds.min, bounds.max);
+const size = bounds.max.subtract(bounds.min);
+const maxSize = Math.max(size.x, size.y, size.z);
+
+camera.position = new BABYLON.Vector3(
+    center.x,
+    bounds.min.y + 1.50,
+    bounds.min.z - maxSize * 0.15
+);
+
+camera.setTarget(new BABYLON.Vector3(
+    center.x,
+    bounds.min.y + 1.50,
+    center.z
+));
+
+console.log("CENTRO MODELO:", center);
+console.log("TAMANO MODELO:", size);
 
     // Activar WebXR
     try {
 
-        const xr = await scene.createDefaultXRExperienceAsync({
-            floorMeshes: []
-        });
+const xr = await scene.createDefaultXRExperienceAsync({
+    floorMeshes: [],
+    disableTeleportation: true
+});
 
+const featuresManager = xr.baseExperience.featuresManager;
+
+featuresManager.enableFeature(
+    BABYLON.WebXRFeatureName.MOVEMENT,
+    "latest",
+    {
+        xrInput: xr.input,
+        movementOrientationFollowsViewerPose: true,
+        movementSpeed: 0.08,
+        rotationSpeed: 0.20
+    }
+);
+      
         console.log("SGOC XR ACTIVO");
 
     } catch (error) {
