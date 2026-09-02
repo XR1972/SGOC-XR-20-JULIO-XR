@@ -176,7 +176,27 @@ featuresManager.enableFeature(
         rotationSpeed: 0.20
     }
 );
-      
+
+        xr.input.onControllerAddedObservable.add((xrController) => {
+
+    if (xrController.inputSource.handedness !== "left") return;
+
+    xrController.onMotionControllerInitObservable.add((motionController) => {
+
+        const thumbsticks = motionController.getAllComponentsOfType("thumbstick");
+        if (!thumbsticks.length) return;
+
+        const stick = thumbsticks[0];
+
+        stick.onAxisValueChangedObservable.add((axes) => {
+
+            console.log("JOYSTICK IZQUIERDO", axes.x, axes.y);
+
+        });
+
+    });
+
+});
         console.log("SGOC XR ACTIVO");
 
     } catch (error) {
