@@ -82,7 +82,37 @@ const createScene = async function () {
 
 
     // Encuadrar automaticamente el modelo cargado
-const meshes = result.meshes.filter(m => m.getTotalVertices && m.getTotalVertices() > 0);
+const candidatos = result.meshes.filter(m =>
+    m.getTotalVertices &&
+    m.getTotalVertices() > 0
+);
+
+const centros = candidatos.map(m =>
+    m.getBoundingInfo().boundingBox.centerWorld
+);
+
+const xs = centros.map(c => c.x).sort((a,b) => a-b);
+const ys = centros.map(c => c.y).sort((a,b) => a-b);
+const zs = centros.map(c => c.z).sort((a,b) => a-b);
+
+const medio = a => a[Math.floor(a.length / 2)];
+
+const centroPrincipal = new BABYLON.Vector3(
+    medio(xs),
+    medio(ys),
+    medio(zs)
+);
+
+const meshes = candidatos.filter(m => {
+    const c = m.getBoundingInfo().boundingBox.centerWorld;
+
+    return (
+        Math.abs(c.x - centroPrincipal.x) < 60 &&
+        Math.abs(c.y - centroPrincipal.y) < 60 &&
+        Math.abs(c.z - centroPrincipal.z) < 20
+    );
+});
+
 const bounds = BABYLON.Mesh.MinMax(meshes);
 const center = BABYLON.Vector3.Center(bounds.min, bounds.max);
 const size = bounds.max.subtract(bounds.min);
