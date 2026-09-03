@@ -177,27 +177,7 @@ const xrCamera = xr.baseExperience.camera;
 
 jugador.position.copyFrom(xrCamera.position);
 
-let ultimaPosXR = xrCamera.position.clone();
 
-scene.onBeforeRenderObservable.add(() => {
-
-    const posicionActual = xrCamera.position.clone();
-
-    const desplazamiento = posicionActual.subtract(ultimaPosXR);
-
-    // Por ahora solo colisiones horizontales
-    desplazamiento.y = 0;
-
-    if (desplazamiento.lengthSquared() > 0.000001) {
-
-        jugador.moveWithCollisions(desplazamiento);
-
-        xrCamera.position.x = jugador.position.x;
-        xrCamera.position.z = jugador.position.z;
-    }
-
-    ultimaPosXR.copyFrom(xrCamera.position);
-});
         
    // Colisiones de la cámara XR
 
