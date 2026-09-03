@@ -99,7 +99,19 @@ skybox.infiniteDistance = true;
     result.meshes.forEach(mesh => {
     mesh.checkCollisions = true;
     });
+const jugador = BABYLON.MeshBuilder.CreateBox(
+    "jugadorColision",
+    {
+        width: 0.6,
+        height: 1.7,
+        depth: 0.6
+    },
+    scene
+);
 
+jugador.isVisible = false;
+jugador.checkCollisions = true;
+jugador.ellipsoid = new BABYLON.Vector3(0.3, 0.85, 0.3);
 
     // Encuadrar automaticamente el modelo cargado
 const candidatos = result.meshes.filter(m =>
@@ -160,7 +172,33 @@ const xr = await scene.createDefaultXRExperienceAsync({
     floorMeshes: [],
     disableTeleportation: true
 });
+        
+const xrCamera = xr.baseExperience.camera;
 
+jugador.position.copyFrom(xrCamera.position);
+
+let ultimaPosXR = xrCamera.position.clone();
+
+scene.onBeforeRenderObservable.add(() => {
+
+    const posicionActual = xrCamera.position.clone();
+
+    const desplazamiento = posicionActual.subtract(ultimaPosXR);
+
+    // Por ahora solo colisiones horizontales
+    desplazamiento.y = 0;
+
+    if (desplazamiento.lengthSquared() > 0.000001) {
+
+        jugador.moveWithCollisions(desplazamiento);
+
+        xrCamera.position.x = jugador.position.x;
+        xrCamera.position.z = jugador.position.z;
+    }
+
+    ultimaPosXR.copyFrom(xrCamera.position);
+});
+        
    // Colisiones de la cámara XR
 
 
