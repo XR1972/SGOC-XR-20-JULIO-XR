@@ -190,7 +190,7 @@ const movementFeature = featuresManager.enableFeature(
     "latest",
     {
         xrInput: xr.input,
-        movementOrientationFollowsViewerPose: false,            
+        movementOrientationFollowsViewerPose: true,            
         movementSpeed: 0.02,
         rotationSpeed: 0.05
     }
@@ -221,8 +221,7 @@ if (grip) {
 
       if (gripPressed && Math.abs(axes.x) > 0.15) {
     xrCamera.cameraRotation.y += axes.x * 0.01;
-    movementFeature.movementDirection.y += axes.x * 0.01;
-         }
+             }
         });
 
     });
