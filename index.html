@@ -237,7 +237,7 @@ if (grip) {
     const right = BABYLON.Vector3.Cross(BABYLON.Axis.Y, forward);
     right.normalize();
 
-    const velocidad = 5.0;
+    const velocidad = 1.5;
 
     // Adelante / atrás siempre funciona
     xrCamera.position.addInPlace(
@@ -253,7 +253,7 @@ if (grip) {
 
     // Con grip: izquierda / derecha = giro
     if (gripPressed && Math.abs(stickX) > 0.15) {
-        xrCamera.cameraRotation.y += stickX * 0.005;
+        xrCamera.cameraRotation.y += stickX * 0.003;
     }
 
 });
