@@ -185,16 +185,18 @@ jugador.position.copyFrom(xrCamera.position);
 const featuresManager = xr.baseExperience.featuresManager;
 
 let gripPressed = false;
+/*
 featuresManager.enableFeature(
     BABYLON.WebXRFeatureName.MOVEMENT,
     "latest",
     {
         xrInput: xr.input,
-        movementOrientationFollowsViewerPose: false,            
+        movementOrientationFollowsViewerPose: false,
         movementSpeed: 0.02,
         rotationSpeed: 0.05
     }
 );
+*/
 
         xr.input.onControllerAddedObservable.add((xrController) => {
 
@@ -214,15 +216,47 @@ if (grip) {
         if (!thumbsticks.length) return;
 
         const stick = thumbsticks[0];
+    let stickX = 0;
+    let stickY = 0;
 
-        stick.onAxisValueChangedObservable.add((axes) => {
+    stick.onAxisValueChangedObservable.add((axes) => {
+        stickX = Math.abs(axes.x) > 0.15 ? axes.x : 0;
+         stickY = Math.abs(axes.y) > 0.15 ? axes.y : 0;
+});
 
-      const xrCamera = xr.baseExperience.camera;
+        scene.onBeforeRenderObservable.add(() => {
 
-      if (gripPressed && Math.abs(axes.x) > 0.15) {
-    xrCamera.cameraRotation.y += axes.x * 0.01;
-             }
-        });
+    const xrCamera = xr.baseExperience.camera;
+
+    // Dirección hacia adelante según la orientación actual
+    const forward = xrCamera.getDirection(BABYLON.Axis.Z);
+    forward.y = 0;
+    forward.normalize();
+
+    // Dirección lateral
+    const right = BABYLON.Vector3.Cross(BABYLON.Axis.Y, forward);
+    right.normalize();
+
+    const velocidad = 0.02;
+
+    // Adelante / atrás siempre funciona
+    xrCamera.position.addInPlace(
+        forward.scale(-stickY * velocidad)
+    );
+
+    // Sin grip: izquierda / derecha = desplazamiento lateral
+    if (!gripPressed) {
+        xrCamera.position.addInPlace(
+            right.scale(stickX * velocidad)
+        );
+    }
+
+    // Con grip: izquierda / derecha = giro
+    if (gripPressed && Math.abs(stickX) > 0.15) {
+        xrCamera.cameraRotation.y += stickX * 0.01;
+    }
+
+});
 
     });
 
