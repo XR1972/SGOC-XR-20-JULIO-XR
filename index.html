@@ -185,12 +185,12 @@ jugador.position.copyFrom(xrCamera.position);
 const featuresManager = xr.baseExperience.featuresManager;
 
 let gripPressed = false;
-const movementFeature = featuresManager.enableFeature(
+featuresManager.enableFeature(
     BABYLON.WebXRFeatureName.MOVEMENT,
     "latest",
     {
         xrInput: xr.input,
-        movementOrientationFollowsViewerPose: true,            
+        movementOrientationFollowsViewerPose: false,            
         movementSpeed: 0.02,
         rotationSpeed: 0.05
     }
