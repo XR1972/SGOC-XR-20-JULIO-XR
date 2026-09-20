@@ -183,7 +183,16 @@ xr.input.onControllerAddedObservable.add((xrController) => {
         scene.onBeforeRenderObservable.add(() => {
 
             const camaraXR = xr.baseExperience.camera;
-            const deltaFactor = Math.min(engine.getDeltaTime() / 16.6667, 3);
+
+            // Solo un eje manda a la vez: si avanza, no gira; si gira, no avanza
+            let ejeAdelante = 0;
+            let ejeGiro = 0;
+
+            if (Math.abs(stickY) >= Math.abs(stickX)) {
+                ejeAdelante = stickY;
+            } else {
+                ejeGiro = stickX;
+            }
 
             // Direccion horizontal hacia donde mira (protegida si mira casi vertical)
             const miraHacia = camaraXR.getDirection(BABYLON.Axis.Z);
@@ -191,19 +200,14 @@ xr.input.onControllerAddedObservable.add((xrController) => {
             const largo = horizontal.length();
             const direccion = largo > 0.2 ? horizontal.scale(1 / largo) : BABYLON.Vector3.Zero();
 
-            const velocidad = 1.0;
-            let desplazamiento = direccion.scale(-stickY * velocidad * deltaFactor);
+            const velocidad = 0.8;
 
-            const distanciaMaxima = 0.15;
-            if (desplazamiento.length() > distanciaMaxima) {
-                desplazamiento = desplazamiento.normalize().scale(distanciaMaxima);
-            }
+            camaraXR.position.addInPlace(
+                direccion.scale(-ejeAdelante * velocidad)
+            );
 
-            camaraXR.position.addInPlace(desplazamiento);
-
-            // Izquierda / derecha = giro en Y
-            if (Math.abs(stickX) > 0.15) {
-                camaraXR.cameraRotation.y += stickX * 0.003 * deltaFactor;
+            if (Math.abs(ejeGiro) > 0.15) {
+                camaraXR.cameraRotation.y += ejeGiro * 0.003;
             }
 
         });
