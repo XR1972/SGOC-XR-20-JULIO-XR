@@ -93,6 +93,14 @@ skyboxMaterial.reflectionTexture.coordinatesMode =
 skybox.material = skyboxMaterial;
 skybox.infiniteDistance = true;
 
+// Iluminacion ambiental del cielo para que la fachada no se vea plana
+scene.environmentTexture = skyboxMaterial.reflectionTexture;
+scene.environmentIntensity = 1.2;
+
+// Luz direccional tipo "sol" para dar brillo y sombra a la fachada
+const sol = new BABYLON.DirectionalLight("sol", new BABYLON.Vector3(-0.5, -1, -0.3), scene);
+sol.intensity = 1.5;
+
     // Cargar edificio
     const result = await BABYLON.SceneLoader.ImportMeshAsync(
         "",
@@ -176,93 +184,86 @@ console.log("TAMANO MODELO:", size);
 
 const xr = await scene.createDefaultXRExperienceAsync({
     floorMeshes: [],
-    disableTeleportation: true
+    disableTeleportation: true,
+    disablePointerSelection: true
 });
-        
+
 const xrCamera = xr.baseExperience.camera;
 
 jugador.position.copyFrom(xrCamera.position);
 
-
-        
-   // Colisiones de la cámara XR
-
-
-const featuresManager = xr.baseExperience.featuresManager;
+// Colisiones de la cámara XR
 
 let gripPressed = false;
-/*
-featuresManager.enableFeature(
-    BABYLON.WebXRFeatureName.MOVEMENT,
-    "latest",
-    {
-        xrInput: xr.input,
-        movementOrientationFollowsViewerPose: false,
-        movementSpeed: 0.02,
-        rotationSpeed: 0.05
-    }
-);
-*/
 
-        xr.input.onControllerAddedObservable.add((xrController) => {
+xr.input.onControllerAddedObservable.add((xrController) => {
 
-   if (xrController.inputSource.handedness !== "right") return;
+    if (xrController.inputSource.handedness !== "right") return;
 
     xrController.onMotionControllerInitObservable.add((motionController) => {
 
+        // Gatillo lateral (squeeze) = volar. Al soltarlo, aterriza en el suelo de abajo.
         const grip = motionController.getComponentOfType("squeeze");
 
-if (grip) {
-    grip.onButtonStateChangedObservable.add((component) => {
-        gripPressed = component.pressed;
-    });
-}
+        if (grip) {
+            grip.onButtonStateChangedObservable.add((component) => {
+
+                const estabaVolando = gripPressed;
+                gripPressed = component.pressed;
+
+                if (estabaVolando && !gripPressed) {
+                    const camaraXR = xr.baseExperience.camera;
+                    const ray = new BABYLON.Ray(
+                        new BABYLON.Vector3(camaraXR.position.x, camaraXR.position.y + 5, camaraXR.position.z),
+                        new BABYLON.Vector3(0, -1, 0),
+                        100
+                    );
+                    const hit = scene.pickWithRay(ray, (mesh) => mesh.checkCollisions);
+                    if (hit && hit.pickedPoint) {
+                        camaraXR.position.y = hit.pickedPoint.y + 1.5;
+                    }
+                }
+            });
+        }
 
         const thumbsticks = motionController.getAllComponentsOfType("thumbstick");
         if (!thumbsticks.length) return;
 
         const stick = thumbsticks[0];
-    let stickX = 0;
-    let stickY = 0;
+        let stickX = 0;
+        let stickY = 0;
 
-    stick.onAxisValueChangedObservable.add((axes) => {
-        stickX = Math.abs(axes.x) > 0.15 ? axes.x : 0;
-         stickY = Math.abs(axes.y) > 0.15 ? axes.y : 0;
-});
+        stick.onAxisValueChangedObservable.add((axes) => {
+            stickX = Math.abs(axes.x) > 0.15 ? axes.x : 0;
+            stickY = Math.abs(axes.y) > 0.15 ? axes.y : 0;
+        });
 
         scene.onBeforeRenderObservable.add(() => {
 
-    const xrCamera = xr.baseExperience.camera;
+            const camaraXR = xr.baseExperience.camera;
 
-    // Dirección hacia adelante según la orientación actual
-    const forward = xrCamera.getDirection(BABYLON.Axis.Z);
-    forward.y = 0;
-    forward.normalize();
+            // Direccion hacia donde mira
+            const forward = camaraXR.getDirection(BABYLON.Axis.Z);
 
-    // Dirección lateral
-    const right = BABYLON.Vector3.Cross(BABYLON.Axis.Y, forward);
-    right.normalize();
+            if (!gripPressed) {
+                // Caminando: se mueve solo en el plano horizontal
+                forward.y = 0;
+            }
+            forward.normalize();
 
-    const velocidad = 0.375;
+            const velocidad = 0.375;
 
-    // Adelante / atrás siempre funciona
-    xrCamera.position.addInPlace(
-        forward.scale(-stickY * velocidad)
-    );
+            // Adelante / atras (y si esta volando, tambien sube/baja segun hacia donde mire)
+            camaraXR.position.addInPlace(
+                forward.scale(-stickY * velocidad)
+            );
 
-    // Sin grip: izquierda / derecha = desplazamiento lateral
-    if (!gripPressed) {
-        xrCamera.position.addInPlace(
-            right.scale(stickX * velocidad)
-        );
-    }
+            // Izquierda / derecha = giro en Y, siempre
+            if (Math.abs(stickX) > 0.15) {
+                camaraXR.cameraRotation.y += stickX * 0.003;
+            }
 
-    // Con grip: izquierda / derecha = giro
-    if (gripPressed && Math.abs(stickX) > 0.15) {
-        xrCamera.cameraRotation.y += stickX * 0.003;
-    }
-
-});
+        });
 
     });
 
@@ -293,13 +294,6 @@ window.addEventListener("resize", function () {
 
 </body>
 </html>
-
-
-
-
-
-
-
 
 
 
