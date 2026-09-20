@@ -143,10 +143,10 @@ const center = BABYLON.Vector3.Center(bounds.min, bounds.max);
 const size = bounds.max.subtract(bounds.min);
 const maxSize = Math.max(size.x, size.y, size.z);
 
-camera.position = new BABYLON.Vector3(
+scene.imageProcessingConfiguration.toneMappingEnabled = false;
     center.x,
     bounds.min.y + 1.50,
-    bounds.min.z - maxSize * 0.35
+    bounds.min.z - maxSize * 0.18
 );
 
 camera.setTarget(new BABYLON.Vector3(
