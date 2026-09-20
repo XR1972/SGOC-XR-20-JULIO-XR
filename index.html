@@ -233,7 +233,7 @@ xr.input.onControllerAddedObservable.add((xrController) => {
         scene.onBeforeRenderObservable.add(() => {
 
             const camaraXR = xr.baseExperience.camera;
-            const deltaFactor = engine.getDeltaTime() / 16.6667;
+            const deltaFactor = Math.min(engine.getDeltaTime() / 16.6667, 3);
 
             const forward = camaraXR.getDirection(BABYLON.Axis.Z);
 
