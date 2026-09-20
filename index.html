@@ -38,13 +38,11 @@ const createScene = async function () {
     scene.collisionsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, -0.5, 0);
 
-    // Ajuste de exposicion para que el cielo HDR se vea brillante y natural
     scene.imageProcessingConfiguration.toneMappingEnabled = true;
     scene.imageProcessingConfiguration.toneMappingType = BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
     scene.imageProcessingConfiguration.exposure = 1.4;
     scene.imageProcessingConfiguration.contrast = 1.1;
 
-    // Cámara inicial
     const camera = new BABYLON.UniversalCamera(
         "camera",
         new BABYLON.Vector3(0, 1.70, -5),
@@ -59,12 +57,11 @@ const createScene = async function () {
     camera.checkCollisions = true;
     camera.ellipsoid = new BABYLON.Vector3(0.4, 0.85, 0.4);
 
-    camera.keysUp.push(87);     // W
-    camera.keysDown.push(83);   // S
-    camera.keysLeft.push(65);   // A
-    camera.keysRight.push(68);  // D
+    camera.keysUp.push(87);
+    camera.keysDown.push(83);
+    camera.keysLeft.push(65);
+    camera.keysRight.push(68);
 
-    // Luz
     const light = new BABYLON.HemisphericLight(
         "light",
         new BABYLON.Vector3(0, 1, 0),
@@ -73,7 +70,6 @@ const createScene = async function () {
 
     light.intensity = 1.2;
    
-// Cielo 360°
 const skybox = BABYLON.MeshBuilder.CreateBox(
     "skyBox",
     { size: 1000 },
@@ -93,15 +89,12 @@ skyboxMaterial.reflectionTexture.coordinatesMode =
 skybox.material = skyboxMaterial;
 skybox.infiniteDistance = true;
 
-// Iluminacion ambiental del cielo para que la fachada no se vea plana
 scene.environmentTexture = skyboxMaterial.reflectionTexture;
 scene.environmentIntensity = 1.2;
 
-// Luz direccional tipo "sol" para dar brillo y sombra a la fachada
 const sol = new BABYLON.DirectionalLight("sol", new BABYLON.Vector3(-0.5, -1, -0.3), scene);
 sol.intensity = 1.5;
 
-    // Cargar edificio
     const result = await BABYLON.SceneLoader.ImportMeshAsync(
         "",
         "./",
@@ -127,7 +120,6 @@ jugador.isVisible = false;
 jugador.checkCollisions = true;
 jugador.ellipsoid = new BABYLON.Vector3(0.3, 0.85, 0.3);
 
-    // Encuadrar automaticamente el modelo cargado
 const candidatos = result.meshes.filter(m =>
     m.getTotalVertices &&
     m.getTotalVertices() > 0
@@ -176,10 +168,6 @@ camera.setTarget(new BABYLON.Vector3(
     center.z
 ));
 
-console.log("CENTRO MODELO:", center);
-console.log("TAMANO MODELO:", size);
-
-    // Activar WebXR
     try {
 
 const xr = await scene.createDefaultXRExperienceAsync({
@@ -191,8 +179,6 @@ const xrCamera = xr.baseExperience.camera;
 
 jugador.position.copyFrom(xrCamera.position);
 
-// Colisiones de la cámara XR
-
 let gripPressed = false;
 
 xr.input.onControllerAddedObservable.add((xrController) => {
@@ -201,7 +187,6 @@ xr.input.onControllerAddedObservable.add((xrController) => {
 
     xrController.onMotionControllerInitObservable.add((motionController) => {
 
-        // Gatillo lateral (squeeze) = volar. Al soltarlo, aterriza en el suelo de abajo.
         const grip = motionController.getComponentOfType("squeeze");
 
         if (grip) {
@@ -210,11 +195,12 @@ xr.input.onControllerAddedObservable.add((xrController) => {
                 const estabaVolando = gripPressed;
                 gripPressed = component.pressed;
 
-                // AYUDA VISUAL TEMPORAL: se tine de verde mientras esta oprimido,
-                // para confirmar si el boton se detecta. Luego la quitamos.
                 light.diffuse = gripPressed
                     ? new BABYLON.Color3(0.3, 1, 0.3)
                     : new BABYLON.Color3(1, 1, 1);
+
+                // Mientras vuela, se rompen las colisiones para poder atravesar
+                jugador.checkCollisions = !gripPressed;
 
                 if (estabaVolando && !gripPressed) {
                     const camaraXR = xr.baseExperience.camera;
@@ -226,6 +212,7 @@ xr.input.onControllerAddedObservable.add((xrController) => {
                     const hit = scene.pickWithRay(ray, (mesh) => mesh.checkCollisions);
                     if (hit && hit.pickedPoint) {
                         camaraXR.position.y = hit.pickedPoint.y + 1.5;
+                        jugador.position.copyFrom(camaraXR.position);
                     }
                 }
             });
@@ -246,26 +233,28 @@ xr.input.onControllerAddedObservable.add((xrController) => {
         scene.onBeforeRenderObservable.add(() => {
 
             const camaraXR = xr.baseExperience.camera;
+            const deltaFactor = engine.getDeltaTime() / 16.6667;
 
-            // Direccion hacia donde mira
             const forward = camaraXR.getDirection(BABYLON.Axis.Z);
 
             if (!gripPressed) {
-                // Caminando: se mueve solo en el plano horizontal
                 forward.y = 0;
             }
             forward.normalize();
 
             const velocidad = 1.0;
+            const desplazamiento = forward.scale(-stickY * velocidad * deltaFactor);
 
-            // Adelante / atras (y si esta volando, tambien sube/baja segun hacia donde mire)
-            camaraXR.position.addInPlace(
-                forward.scale(-stickY * velocidad)
-            );
+            if (gripPressed) {
+                camaraXR.position.addInPlace(desplazamiento);
+                jugador.position.copyFrom(camaraXR.position);
+            } else {
+                jugador.moveWithCollisions(desplazamiento);
+                camaraXR.position.copyFrom(jugador.position);
+            }
 
-            // Izquierda / derecha = giro en Y, siempre
             if (Math.abs(stickX) > 0.15) {
-                camaraXR.cameraRotation.y += stickX * 0.003;
+                camaraXR.cameraRotation.y += stickX * 0.003 * deltaFactor;
             }
 
         });
