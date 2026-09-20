@@ -38,6 +38,12 @@ const createScene = async function () {
     scene.collisionsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, -0.5, 0);
 
+    // Ajuste de exposicion para que el cielo HDR se vea brillante y natural
+    scene.imageProcessingConfiguration.toneMappingEnabled = true;
+    scene.imageProcessingConfiguration.toneMappingType = BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
+    scene.imageProcessingConfiguration.exposure = 1.4;
+    scene.imageProcessingConfiguration.contrast = 1.1;
+
     // Cámara inicial
     const camera = new BABYLON.UniversalCamera(
         "camera",
@@ -79,7 +85,7 @@ skyboxMaterial.backFaceCulling = false;
 skyboxMaterial.disableLighting = true;
 
 skyboxMaterial.reflectionTexture =
-    new BABYLON.HDRCubeTexture("./Cielo.hdr", scene, 256);
+    new BABYLON.HDRCubeTexture("./Cielo.hdr", scene, 1024);
 
 skyboxMaterial.reflectionTexture.coordinatesMode =
     BABYLON.Texture.SKYBOX_MODE;
@@ -287,8 +293,6 @@ window.addEventListener("resize", function () {
 
 </body>
 </html>
-
-
 
 
 
