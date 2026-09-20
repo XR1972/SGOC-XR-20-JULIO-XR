@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -117,8 +118,6 @@ const jugador = BABYLON.MeshBuilder.CreateBox(
 );
 
 jugador.isVisible = false;
-jugador.checkCollisions = true;
-jugador.ellipsoid = new BABYLON.Vector3(0.3, 0.85, 0.3);
 
 const candidatos = result.meshes.filter(m =>
     m.getTotalVertices &&
@@ -199,9 +198,6 @@ xr.input.onControllerAddedObservable.add((xrController) => {
                     ? new BABYLON.Color3(0.3, 1, 0.3)
                     : new BABYLON.Color3(1, 1, 1);
 
-                // Mientras vuela, se rompen las colisiones para poder atravesar
-                jugador.checkCollisions = !gripPressed;
-
                 if (estabaVolando && !gripPressed) {
                     const camaraXR = xr.baseExperience.camera;
                     const ray = new BABYLON.Ray(
@@ -212,7 +208,6 @@ xr.input.onControllerAddedObservable.add((xrController) => {
                     const hit = scene.pickWithRay(ray, (mesh) => mesh.checkCollisions);
                     if (hit && hit.pickedPoint) {
                         camaraXR.position.y = hit.pickedPoint.y + 1.5;
-                        jugador.position.copyFrom(camaraXR.position);
                     }
                 }
             });
@@ -247,17 +242,10 @@ xr.input.onControllerAddedObservable.add((xrController) => {
 
             const distanciaMaxima = 0.15;
             if (desplazamiento.length() > distanciaMaxima) {
-            desplazamiento = desplazamiento.normalize().scale(distanciaMaxima);
-             }
-
-          
-            if (gripPressed) {
-                camaraXR.position.addInPlace(desplazamiento);
-                jugador.position.copyFrom(camaraXR.position);
-            } else {
-                jugador.moveWithCollisions(desplazamiento);
-                camaraXR.position.copyFrom(jugador.position);
+                desplazamiento = desplazamiento.normalize().scale(distanciaMaxima);
             }
+
+            camaraXR.position.addInPlace(desplazamiento);
 
             if (Math.abs(stickX) > 0.15) {
                 camaraXR.cameraRotation.y += stickX * 0.003 * deltaFactor;
