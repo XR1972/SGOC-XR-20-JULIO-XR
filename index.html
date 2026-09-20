@@ -144,6 +144,7 @@ const size = bounds.max.subtract(bounds.min);
 const maxSize = Math.max(size.x, size.y, size.z);
 
 scene.imageProcessingConfiguration.toneMappingEnabled = false;
+    camera.position = new BABYLON.Vector3(
     center.x,
     bounds.min.y + 1.50,
     bounds.min.z - maxSize * 0.18
