@@ -184,8 +184,7 @@ console.log("TAMANO MODELO:", size);
 
 const xr = await scene.createDefaultXRExperienceAsync({
     floorMeshes: [],
-    disableTeleportation: true,
-    disablePointerSelection: true
+    disableTeleportation: true
 });
 
 const xrCamera = xr.baseExperience.camera;
@@ -210,6 +209,12 @@ xr.input.onControllerAddedObservable.add((xrController) => {
 
                 const estabaVolando = gripPressed;
                 gripPressed = component.pressed;
+
+                // AYUDA VISUAL TEMPORAL: se tine de verde mientras esta oprimido,
+                // para confirmar si el boton se detecta. Luego la quitamos.
+                light.diffuse = gripPressed
+                    ? new BABYLON.Color3(0.3, 1, 0.3)
+                    : new BABYLON.Color3(1, 1, 1);
 
                 if (estabaVolando && !gripPressed) {
                     const camaraXR = xr.baseExperience.camera;
@@ -251,7 +256,7 @@ xr.input.onControllerAddedObservable.add((xrController) => {
             }
             forward.normalize();
 
-            const velocidad = 0.375;
+            const velocidad = 1.0;
 
             // Adelante / atras (y si esta volando, tambien sube/baja segun hacia donde mire)
             camaraXR.position.addInPlace(
@@ -294,14 +299,3 @@ window.addEventListener("resize", function () {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
