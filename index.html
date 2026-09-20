@@ -200,14 +200,14 @@ xr.input.onControllerAddedObservable.add((xrController) => {
             const largo = horizontal.length();
             const direccion = largo > 0.2 ? horizontal.scale(1 / largo) : BABYLON.Vector3.Zero();
 
-            const velocidad = 0.8;
+            const velocidad = 1.6;
 
             camaraXR.position.addInPlace(
                 direccion.scale(-ejeAdelante * velocidad)
             );
 
             if (Math.abs(ejeGiro) > 0.15) {
-                camaraXR.cameraRotation.y += ejeGiro * 0.003;
+                camaraXR.cameraRotation.y += ejeGiro * 0.006;
             }
 
         });
