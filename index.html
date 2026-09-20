@@ -200,7 +200,7 @@ xr.input.onControllerAddedObservable.add((xrController) => {
             const largo = horizontal.length();
             const direccion = largo > 0.2 ? horizontal.scale(1 / largo) : BABYLON.Vector3.Zero();
 
-            const velocidad = 1.6;
+            const velocidad = 1.8;
 
             camaraXR.position.addInPlace(
                 direccion.scale(-ejeAdelante * velocidad)
