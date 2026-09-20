@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -107,17 +106,6 @@ sol.intensity = 1.5;
     result.meshes.forEach(mesh => {
     mesh.checkCollisions = true;
     });
-const jugador = BABYLON.MeshBuilder.CreateBox(
-    "jugadorColision",
-    {
-        width: 0.6,
-        height: 1.7,
-        depth: 0.6
-    },
-    scene
-);
-
-jugador.isVisible = false;
 
 const candidatos = result.meshes.filter(m =>
     m.getTotalVertices &&
@@ -174,44 +162,11 @@ const xr = await scene.createDefaultXRExperienceAsync({
     disableTeleportation: true
 });
 
-const xrCamera = xr.baseExperience.camera;
-
-jugador.position.copyFrom(xrCamera.position);
-
-let gripPressed = false;
-
 xr.input.onControllerAddedObservable.add((xrController) => {
 
     if (xrController.inputSource.handedness !== "right") return;
 
     xrController.onMotionControllerInitObservable.add((motionController) => {
-
-        const grip = motionController.getComponentOfType("squeeze");
-
-        if (grip) {
-            grip.onButtonStateChangedObservable.add((component) => {
-
-                const estabaVolando = gripPressed;
-                gripPressed = component.pressed;
-
-                light.diffuse = gripPressed
-                    ? new BABYLON.Color3(0.3, 1, 0.3)
-                    : new BABYLON.Color3(1, 1, 1);
-
-                if (estabaVolando && !gripPressed) {
-                    const camaraXR = xr.baseExperience.camera;
-                    const ray = new BABYLON.Ray(
-                        new BABYLON.Vector3(camaraXR.position.x, camaraXR.position.y + 5, camaraXR.position.z),
-                        new BABYLON.Vector3(0, -1, 0),
-                        100
-                    );
-                    const hit = scene.pickWithRay(ray, (mesh) => mesh.checkCollisions);
-                    if (hit && hit.pickedPoint) {
-                        camaraXR.position.y = hit.pickedPoint.y + 1.5;
-                    }
-                }
-            });
-        }
 
         const thumbsticks = motionController.getAllComponentsOfType("thumbstick");
         if (!thumbsticks.length) return;
@@ -230,15 +185,14 @@ xr.input.onControllerAddedObservable.add((xrController) => {
             const camaraXR = xr.baseExperience.camera;
             const deltaFactor = Math.min(engine.getDeltaTime() / 16.6667, 3);
 
-            const forward = camaraXR.getDirection(BABYLON.Axis.Z);
-
-            if (!gripPressed) {
-                forward.y = 0;
-            }
-            forward.normalize();
+            // Direccion horizontal hacia donde mira (protegida si mira casi vertical)
+            const miraHacia = camaraXR.getDirection(BABYLON.Axis.Z);
+            const horizontal = new BABYLON.Vector3(miraHacia.x, 0, miraHacia.z);
+            const largo = horizontal.length();
+            const direccion = largo > 0.2 ? horizontal.scale(1 / largo) : BABYLON.Vector3.Zero();
 
             const velocidad = 1.0;
-            let desplazamiento = forward.scale(-stickY * velocidad * deltaFactor);
+            let desplazamiento = direccion.scale(-stickY * velocidad * deltaFactor);
 
             const distanciaMaxima = 0.15;
             if (desplazamiento.length() > distanciaMaxima) {
@@ -247,6 +201,7 @@ xr.input.onControllerAddedObservable.add((xrController) => {
 
             camaraXR.position.addInPlace(desplazamiento);
 
+            // Izquierda / derecha = giro en Y
             if (Math.abs(stickX) > 0.15) {
                 camaraXR.cameraRotation.y += stickX * 0.003 * deltaFactor;
             }
