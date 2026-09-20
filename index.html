@@ -243,8 +243,14 @@ xr.input.onControllerAddedObservable.add((xrController) => {
             forward.normalize();
 
             const velocidad = 1.0;
-            const desplazamiento = forward.scale(-stickY * velocidad * deltaFactor);
+            let desplazamiento = forward.scale(-stickY * velocidad * deltaFactor);
 
+            const distanciaMaxima = 0.15;
+            if (desplazamiento.length() > distanciaMaxima) {
+            desplazamiento = desplazamiento.normalize().scale(distanciaMaxima);
+             }
+
+          
             if (gripPressed) {
                 camaraXR.position.addInPlace(desplazamiento);
                 jugador.position.copyFrom(camaraXR.position);
